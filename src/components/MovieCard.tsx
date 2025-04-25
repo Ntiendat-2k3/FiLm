@@ -1,19 +1,20 @@
 import Link from "next/link"
 import Image from "next/image"
 import type { Movie } from "@/types/ophim"
+import { getFullImageUrl } from "@/lib/api/ophim"
+import { Play } from "lucide-react"
 
 interface MovieCardProps {
   movie: Movie
 }
 
 export default function MovieCard({ movie }: MovieCardProps) {
-  // Ensure image URLs are absolute
-  const imageUrl =
-    movie.thumb_url && movie.thumb_url.startsWith("http") ? movie.thumb_url : "/placeholder.svg?height=300&width=200"
+  // Get the full image URL
+  const imageUrl = getFullImageUrl(movie.thumb_url)
 
   return (
-    <Link href={`/movie/${movie.slug}`} className="group">
-      <div className="relative overflow-hidden rounded-lg bg-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl">
+    <Link href={`/movie/${movie.slug}`} className="group block">
+      <div className="relative overflow-hidden rounded-lg bg-gray-800 transition-all duration-300 hover:scale-105">
         <div className="aspect-[2/3] relative">
           <Image
             src={imageUrl || "/placeholder.svg"}
@@ -23,7 +24,14 @@ export default function MovieCard({ movie }: MovieCardProps) {
             className="object-cover"
             priority={false}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-100"></div>
+
+          {/* Play button overlay (hidden by default, shown on hover) */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="bg-red-600/80 text-white rounded-full p-3 transform scale-75 group-hover:scale-100 transition-transform duration-300">
+              <Play size={20} />
+            </div>
+          </div>
 
           {/* Quality badge */}
           {movie.quality && (
@@ -38,15 +46,19 @@ export default function MovieCard({ movie }: MovieCardProps) {
               {movie.episode_current}
             </span>
           )}
-        </div>
 
-        <div className="p-3">
-          <h3 className="font-semibold text-white group-hover:text-red-500 transition-colors line-clamp-1">
-            {movie.name}
-          </h3>
-          <p className="text-gray-400 text-sm mt-1 line-clamp-1">
-            {movie.origin_name} ({movie.year})
-          </p>
+          {/* Movie info at bottom */}
+          <div className="absolute bottom-0 left-0 right-0 p-3">
+            <h3 className="font-semibold text-white group-hover:text-red-500 transition-colors line-clamp-1 text-sm">
+              {movie.name}
+            </h3>
+            <div className="flex justify-between items-center">
+              <p className="text-gray-400 text-xs mt-1">{movie.year}</p>
+              {movie.category && movie.category[0] && (
+                <span className="text-gray-400 text-xs">{movie.category[0].name}</span>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </Link>

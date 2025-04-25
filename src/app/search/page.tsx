@@ -3,6 +3,7 @@ import MovieCard from "@/components/MovieCard"
 import Link from "next/link"
 import type { Metadata } from "next"
 import Pagination from "@/components/Pagination"
+import { Search, TrendingUp } from "lucide-react"
 
 interface SearchPageProps {
   searchParams: Promise<{
@@ -22,26 +23,95 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const query = params.q || ""
   const page = Number.parseInt(params.page || "1", 10)
 
-  // If no query, show empty state
+  // Popular search terms
+  const popularSearches = [
+    { term: "action", label: "Action Movies" },
+    { term: "comedy", label: "Comedy" },
+    { term: "horror", label: "Horror" },
+    { term: "romance", label: "Romance" },
+    { term: "sci-fi", label: "Sci-Fi" },
+    { term: "animation", label: "Animation" },
+    { term: "thriller", label: "Thriller" },
+    { term: "drama", label: "Drama" },
+  ]
+
+  // If no query, show empty state with suggestions
   if (!query) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-3xl font-bold mb-6">Search Movies</h1>
-        <p className="text-gray-400 mb-8">Enter a search term to find movies and TV shows</p>
+      <div className="max-w-[1200px] mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-6 text-white">Search Movies</h1>
+
+        <div className="relative mb-8">
+          <form action="/search" className="relative">
+            <input
+              type="text"
+              name="q"
+              placeholder="Search for movies, TV shows, actors..."
+              className="w-full bg-gray-800 text-white px-4 py-3 pr-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+              autoFocus
+            />
+            <button
+              type="submit"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+            >
+              <Search size={20} />
+            </button>
+          </form>
+        </div>
+
+        <div className="mb-8">
+          <h2 className="text-xl font-bold mb-4 flex items-center">
+            <TrendingUp className="mr-2" size={20} />
+            Popular Searches
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {popularSearches.map((item) => (
+              <Link
+                key={item.term}
+                href={`/search?q=${encodeURIComponent(item.term)}`}
+                className="bg-gray-800 hover:bg-gray-700 transition-colors rounded-lg p-4 text-center"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-xl font-bold mb-4">Recent Releases</h2>
+          <p className="text-gray-400">Try searching for the latest movies and TV shows to watch online.</p>
+        </div>
       </div>
     )
   }
 
   try {
-    const { items: movies, params: apiParams } = await searchMovies(query, page)
-    const { totalPages, currentPage } = apiParams.pagination
+    const { items: movies, pagination } = await searchMovies(query, page)
+    const { totalPages, currentPage } = pagination
 
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-[1200px] mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2">Search Results for "{query}"</h1>
+          <h1 className="text-2xl font-bold mb-4">Search Results for "{query}"</h1>
+          <div className="relative mb-6">
+            <form action="/search" className="relative">
+              <input
+                type="text"
+                name="q"
+                defaultValue={query}
+                placeholder="Search for movies, TV shows, actors..."
+                className="w-full bg-gray-800 text-white px-4 py-3 pr-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+              <button
+                type="submit"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+              >
+                <Search size={20} />
+              </button>
+            </form>
+          </div>
           <p className="text-gray-400">
-            Found {apiParams.pagination.totalItems} results • Page {currentPage} of {totalPages}
+            Found {pagination.totalItems} results • Page {currentPage} of {totalPages}
           </p>
         </div>
 
@@ -51,6 +121,22 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             <p className="text-gray-400 mb-6">
               We couldn't find any movies matching "{query}". Please try another search term.
             </p>
+
+            <div className="mb-6">
+              <h3 className="text-lg font-medium mb-3">Popular Searches</h3>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {popularSearches.map((item) => (
+                  <Link
+                    key={item.term}
+                    href={`/search?q=${encodeURIComponent(item.term)}`}
+                    className="bg-gray-700 hover:bg-gray-600 transition-colors rounded-lg px-3 py-2 text-sm"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
             <Link href="/" className="text-red-500 hover:text-red-400 transition-colors">
               Return to Home
             </Link>
@@ -76,7 +162,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     console.error("Error searching movies:", error)
 
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-[1200px] mx-auto px-4 py-8">
         <div className="bg-gray-800 rounded-lg p-8 text-center">
           <h2 className="text-xl font-semibold mb-4">Search error</h2>
           <p className="text-gray-400 mb-6">We're having trouble searching for "{query}". Please try again later.</p>

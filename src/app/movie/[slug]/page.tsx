@@ -1,4 +1,4 @@
-import { getMovieDetail, getMoviesByCategory } from "@/lib/api/ophim"
+import { getMovieDetail, getMoviesByCategory, getFullImageUrl } from "@/lib/api/ophim"
 import Image from "next/image"
 import Link from "next/link"
 import { Play, Calendar, Clock, Star, Film, Globe } from "lucide-react"
@@ -14,32 +14,25 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { item: movie } = await getMovieDetail(params.slug)
+  const { movie } = await getMovieDetail(params.slug)
 
   return {
     title: `${movie.name} (${movie.year})`,
     description: movie.content,
     openGraph: {
-      images: [movie.poster_url || movie.thumb_url],
+      images: [getFullImageUrl(movie.poster_url || movie.thumb_url)],
     },
   }
 }
 
 export default async function MoviePage({ params }: PageProps) {
-  const { item: movie } = await getMovieDetail(params.slug)
+  const { movie, episodes } = await getMovieDetail(params.slug)
 
-  const firstEpisode = movie.episodes[0]?.server_data[0]
+  const firstEpisode = episodes[0]?.server_data[0]
 
-  // Ensure image URLs are absolute
-  const posterUrl =
-    movie.poster_url && movie.poster_url.startsWith("http")
-      ? movie.poster_url
-      : movie.thumb_url && movie.thumb_url.startsWith("http")
-        ? movie.thumb_url
-        : "/placeholder.svg?height=400&width=800"
-
-  const thumbUrl =
-    movie.thumb_url && movie.thumb_url.startsWith("http") ? movie.thumb_url : "/placeholder.svg?height=300&width=200"
+  // Get full image URLs
+  const posterUrl = getFullImageUrl(movie.poster_url || movie.thumb_url)
+  const thumbUrl = getFullImageUrl(movie.thumb_url)
 
   // Fetch related movies based on the first category
   let relatedMovies: Movie[] = []
@@ -101,10 +94,10 @@ export default async function MoviePage({ params }: PageProps) {
               <h2 className="text-xl font-bold mb-4 text-white">Overview</h2>
               <div className="text-gray-300 mb-6 leading-relaxed" dangerouslySetInnerHTML={{ __html: movie.content }} />
 
-              {movie.episodes.length > 0 && (
+              {episodes.length > 0 && (
                 <div className="mt-8">
                   <h2 className="text-xl font-bold mb-4 text-white">Episodes</h2>
-                  <EpisodeList episodes={movie.episodes} movieSlug={movie.slug} />
+                  <EpisodeList episodes={episodes} movieSlug={movie.slug} />
                 </div>
               )}
             </div>

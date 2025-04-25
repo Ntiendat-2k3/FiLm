@@ -1,6 +1,7 @@
 import type { MovieDetailResponse, MovieListResponse } from "@/types/ophim"
 
 const API_URL = process.env.NEXT_PUBLIC_API || "https://ophim1.com"
+const IMAGE_PATH = "https://img.ophim.live/uploads/movies/"
 
 export async function getLatestMovies(page = 1): Promise<MovieListResponse> {
   const response = await fetch(`${API_URL}/danh-sach/phim-moi-cap-nhat?page=${page}`, {
@@ -61,4 +62,17 @@ export async function getMoviesByCountry(country: string, page = 1): Promise<Mov
   }
 
   return response.json()
+}
+
+// Helper function to get full image URL
+export function getFullImageUrl(path: string | undefined): string {
+  if (!path) return "/placeholder.svg?height=300&width=200"
+
+  // If it's already an absolute URL
+  if (path.startsWith("http")) {
+    return path
+  }
+
+  // If it's a relative path without the image domain
+  return `${IMAGE_PATH}${path}`
 }

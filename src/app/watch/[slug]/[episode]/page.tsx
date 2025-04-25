@@ -14,11 +14,12 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { item: movie } = await getMovieDetail(params.slug)
+  const { movie } = await getMovieDetail(params.slug)
 
   // Find the current episode
   let currentEpisodeName = ""
-  for (const server of movie.episodes) {
+  const { episodes } = await getMovieDetail(params.slug)
+  for (const server of episodes) {
     const episode = server.server_data.find((ep) => ep.slug === params.episode)
     if (episode) {
       currentEpisodeName = episode.name
@@ -33,11 +34,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function WatchPage({ params }: PageProps) {
-  const { item: movie } = await getMovieDetail(params.slug)
+  const { movie, episodes } = await getMovieDetail(params.slug)
 
   // Find the current episode
   let currentEpisode = null
-  for (const server of movie.episodes) {
+  for (const server of episodes) {
     const episode = server.server_data.find((ep) => ep.slug === params.episode)
     if (episode) {
       currentEpisode = episode
@@ -74,7 +75,7 @@ export default async function WatchPage({ params }: PageProps) {
 
       <div className="bg-gray-800 rounded-lg p-6 mb-8">
         <h2 className="text-xl font-bold mb-4">Episodes</h2>
-        <EpisodeList episodes={movie.episodes} movieSlug={movie.slug} currentEpisode={params.episode} />
+        <EpisodeList episodes={episodes} movieSlug={movie.slug} currentEpisode={params.episode} />
       </div>
 
       <div className="bg-gray-800 rounded-lg p-6">

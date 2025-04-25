@@ -1,103 +1,121 @@
-import Image from "next/image";
+import { getLatestMovies } from "@/lib/api/ophim"
+import MovieCard from "@/components/MovieCard"
+import Link from "next/link"
+import { ChevronRight } from "lucide-react"
+import Pagination from "@/components/Pagination"
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+interface HomePageProps {
+  searchParams: Promise<{
+    page?: string
+  }>
+}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+export default async function Home({ searchParams }: HomePageProps) {
+  // Await the searchParams before using it (Next.js 15 requirement)
+  const params = await searchParams
+  const page = Number.parseInt(params.page || "1", 10)
+
+  try {
+    const response = await getLatestMovies(page)
+    const { items: latestMovies, params: apiParams } = response
+
+    // Split movies for different sections
+    const movies = latestMovies.slice(0, 12)
+    const series = latestMovies.filter((movie) => movie.type === "series").slice(0, 12)
+
+    // Default pagination values in case API doesn't return expected structure
+    const currentPage = apiParams?.pagination?.currentPage || 1
+    const totalPages = apiParams?.pagination?.totalPages || 1
+
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <section className="mb-12">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-white">Latest Movies</h2>
+            <Link
+              href="/danh-sach/phim-moi-cap-nhat"
+              className="flex items-center text-red-500 hover:text-red-400 transition-colors"
+            >
+              View All <ChevronRight size={16} />
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {movies.map((movie) => (
+              <MovieCard key={movie._id} movie={movie} />
+            ))}
+          </div>
+        </section>
+
+        <section className="mb-12">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-white">TV Series</h2>
+            <Link
+              href="/danh-sach/phim-bo"
+              className="flex items-center text-red-500 hover:text-red-400 transition-colors"
+            >
+              View All <ChevronRight size={16} />
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {series.map((movie) => (
+              <MovieCard key={movie._id} movie={movie} />
+            ))}
+          </div>
+        </section>
+
+        {page === 1 && (
+          <section className="bg-gray-800 rounded-lg p-8 mb-12">
+            <h2 className="text-2xl font-bold mb-4 text-white">Welcome to MovieFlix</h2>
+            <p className="text-gray-300 mb-6">
+              Discover the latest movies and TV shows. Watch online or download to watch later. Our collection is
+              updated daily with new releases and popular titles.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-gray-700 p-6 rounded-lg">
+                <h3 className="text-xl font-semibold mb-3">Movies</h3>
+                <p className="text-gray-400 mb-4">
+                  Explore our vast collection of movies from different genres, countries, and years.
+                </p>
+                <Link
+                  href="/danh-sach/phim-le"
+                  className="inline-block bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
+                >
+                  Browse Movies
+                </Link>
+              </div>
+              <div className="bg-gray-700 p-6 rounded-lg">
+                <h3 className="text-xl font-semibold mb-3">TV Series</h3>
+                <p className="text-gray-400 mb-4">
+                  Follow your favorite TV series and watch episodes as soon as they are released.
+                </p>
+                <Link
+                  href="/danh-sach/phim-bo"
+                  className="inline-block bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
+                >
+                  Browse TV Series
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
+
+        <Pagination currentPage={currentPage} totalPages={totalPages} baseUrl="/?page=" />
+      </div>
+    )
+  } catch (error) {
+    console.error("Error fetching movies:", error)
+
+    // Return a fallback UI in case of error
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-gray-800 rounded-lg p-8 text-center">
+          <h2 className="text-xl font-semibold mb-4">Unable to load movies</h2>
+          <p className="text-gray-400 mb-6">We're having trouble loading the latest movies. Please try again later.</p>
+          <Link href="/" className="text-red-500 hover:text-red-400 transition-colors">
+            Retry
+          </Link>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+      </div>
+    )
+  }
 }

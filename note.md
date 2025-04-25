@@ -1,0 +1,1 @@
+NEXT_PUBLIC_API=https://ophim1.com
